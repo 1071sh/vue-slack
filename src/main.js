@@ -1,8 +1,9 @@
 import Vue from "vue";
 import App from "./App.vue";
 import router from "./router";
-import store from "./store";
+// import store from "./store";
 import firebase from "firebase/app";
+import "./assets/css/tailwind.css";
 
 Vue.config.productionTip = false;
 
@@ -23,6 +24,6 @@ window.firebase = firebase;
 
 new Vue({
     router,
-    store,
+    // store,
     render: (h) => h(App),
 }).$mount("#app");
