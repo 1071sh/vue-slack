@@ -1,50 +1,23 @@
 <template>
   <div>
-    <h1>Firebaseを使った読み書き確認</h1>
-    <input v-model="message" />
-    <button @click="addMessage">メッセージを追加</button>
-    <ul>
-      <li v-for="(message,index) in messages" :key="index">
-        {{ message.content }} index:{{ index }}
-        <span @click="deleteMessage(index)">X</span>
-      </li>
-    </ul>
+    <h1>Slack Clone</h1>
+    <p>ログイン中</p>
+    <div>
+      <button class="py-1 px-4 bg-gray-800 text-white rounded" @click="signOut">サインアウト</button>
+    </div>
   </div>
 </template>
 
 <script>
 import firebase from "firebase/app";
-import "firebase/database";
+import "firebase/auth";
 
 export default {
-  name: "Home",
-  data() {
-    return {
-      message: "",
-      messages: [],
-    };
-  },
   methods: {
-    addMessage() {
-      firebase
-        .database()
-        .ref("slack")
-        .push({
-          content: this.message,
-          user: {
-            name: "John Doe",
-          },
-        });
+    signOut() {
+      firebase.auth().signOut();
+      this.$router.push("/signin");
     },
-    deleteMessage(index) {
-      firebase.database().ref("slack").child(index).remove();
-    },
-  },
-  mounted() {
-    firebase
-      .database()
-      .ref("slack")
-      .on("value", (snapshot) => (this.messages = snapshot.val()));
   },
 };
 </script>

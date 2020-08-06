@@ -15,21 +15,27 @@
               <span class="font-semibold">メールアドレス</span>と
               <span class="font-semibold">パスワード</span>を入力してください。
             </p>
-            <form>
+            <form @submit.prevent="registerUser">
               <div class="mb-2">
                 <input
                   type="email"
+                  v-model="email"
                   placeholder="you@example.com"
                   class="text-xl w-3/5 p-3 border rounded"
                 />
               </div>
               <div class="mb-2">
-                <input type="password" class="text-xl w-3/5 p-3 border rounded" placeholder="パスワード" />
+                <input
+                  type="password"
+                  v-model="password"
+                  class="text-xl w-3/5 p-3 border rounded"
+                  placeholder="パスワード"
+                />
               </div>
               <button
                 type="submit"
                 class="text-xl w-3/5 bg-green-800 text-white py-2 rounded"
-              >ユーザー登録</button>
+              >ユーザの登録</button>
             </form>
           </div>
         </div>
@@ -38,5 +44,28 @@
   </div>
 </template>
 <script>
-export default {};
+import firebase from "firebase/app";
+import "firebase/auth";
+
+export default {
+  data() {
+    return {
+      email: "",
+      password: "",
+    };
+  },
+  methods: {
+    registerUser() {
+      firebase
+        .auth()
+        .createUserWithEmailAndPassword(this.email, this.password)
+        .then((response) => {
+          console.log(response);
+        })
+        .catch((e) => {
+          console.log(e);
+        });
+    },
+  },
+};
 </script>
