@@ -20,6 +20,14 @@
                         <form @submit.prevent="signIn">
                             <div class="mb-2">
                                 <input
+                                    type="email"
+                                    v-model="email"
+                                    placeholder="you@example.com"
+                                    class="text-xl w-3/5 p-3 border rounded"
+                                />
+                            </div>
+                            <div class="mb-2">
+                                <input
                                     type="password"
                                     v-model="password"
                                     class="text-xl w-3/5 p-3 border rounded"
