@@ -76,8 +76,11 @@
                 v-for="user in users"
                 :key="user.user_id"
             >
-                <span class="bg-yellow-400 rounded-full w-3 h-3 mr-2"></span>
-                <span class="opacity-50" @click="directMessage(user.email)">
+                <span
+                    class="rounded-full w-3 h-3 mr-2"
+                    :class="[isOnline(user) ? 'bg-yellow-400' : 'bg-gray-600']"
+                ></span>
+                <span class="opacity-50" @click="directMessage(user)">
                     {{ user.email }}
                 </span>
             </div>
@@ -178,10 +181,14 @@ export default {
             channelModal: false,
             channel: "",
             channels: [],
+            connectionRef: firebase.database().ref("connections"),
+            connection_key: "",
+            connections: [],
         };
     },
     methods: {
         signOut() {
+            this.connectionRef.child(this.connection_key).remove();
             firebase.auth().signOut();
             this.$router.push("/signin");
         },
@@ -271,6 +278,13 @@ export default {
                     this.messages.push(snapshot.val());
                 });
         },
+        isOnline(user) {
+            if (user.status === "online") {
+                return true;
+            } else {
+                return false;
+            }
+        },
     },
     mounted() {
         this.user = firebase.auth().currentUser;
@@ -278,7 +292,14 @@ export default {
             .database()
             .ref("users")
             .on("child_added", (snapshot) => {
-                this.users.push(snapshot.val());
+                let user = snapshot.val();
+
+                if (this.user.uid == user.user_id) {
+                    user.status = "online";
+                } else {
+                    user.status = "offline";
+                }
+                this.users.push(user);
             });
 
         firebase
@@ -286,6 +307,60 @@ export default {
             .ref("channel")
             .on("child_added", (snapshot) => {
                 this.channels.push(snapshot.val());
+            });
+
+        firebase
+            .database()
+            .ref(".info/connected")
+            .on("value", (snapshot) => {
+                if (snapshot.val() === true) {
+                    let ref = this.connectionRef.push();
+                    this.connection_key = ref.key;
+                    ref.onDisconnect().remove();
+
+                    ref.set({
+                        user_id: this.user.uid,
+                        key: this.connection_key,
+                    });
+                }
+            });
+
+        firebase
+            .database()
+            .ref("connections")
+            .on("child_added", (snapshot) => {
+                let new_connection = snapshot.val();
+                this.connections.push(new_connection);
+
+                let user = this.users.find(
+                    (user) => user.user_id === new_connection.user_id
+                );
+
+                if (user != undefined) {
+                    user.status !== "online";
+                }
+            });
+
+        firebase
+            .database()
+            .ref("connections")
+            .on("child_removed", (snapshot) => {
+                let remove_connection = snapshot.val();
+
+                this.connections = this.connections.filter(
+                    (connection) => connection.key !== remove_connection.key
+                );
+
+                let index = this.connections.findIndex((connection) => {
+                    return connection.user_id === remove_connection.user_id;
+                });
+
+                if (index === -1) {
+                    let user = this.users.find(
+                        (user) => user.user_id == remove_connection.user_id
+                    );
+                    user.status = "offline";
+                }
             });
     },
     beforeDestroy() {
@@ -298,6 +373,11 @@ export default {
             .database()
             .ref("messages")
             .child(this.channel_id)
+            .off();
+
+        firebase
+            .database()
+            .ref(".info/connected")
             .off();
     },
 };
